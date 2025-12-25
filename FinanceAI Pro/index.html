@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro Inteligente 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050816;
+            --panel: rgba(8, 14, 33, 0.92);
+            --panel-border: rgba(148, 163, 184, 0.2);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #2dd4bf;
+            --secondary: #38bdf8;
+            --danger: #f87171;
+            --warning: #facc15;
+            --success: #4ade80;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #1d1b4b 0%, #050816 55%, #01010a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 28px 18px 80px;
+        }
+        .app {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        header.hero {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            padding: 28px 30px;
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 20px 50px rgba(3, 7, 18, 0.6);
+        }
+        .hero-text h1 {
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+        .hero-text p { color: var(--muted); font-size: 0.95rem; }
+        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(120deg, #22d3ee, #34d399);
+            color: #03101f;
+            box-shadow: 0 15px 40px rgba(34, 211, 238, 0.35);
+        }
+        .btn-outline {
+            border: 1px solid var(--panel-border);
+            color: var(--text);
+            background: transparent;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .cards-grid {
+            margin-top: 26px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            border-radius: 18px;
+            padding: 20px;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            border: 1px solid transparent;
+            background: linear-gradient(120deg, rgba(56, 189, 248, 0.3), rgba(45, 212, 191, 0.3));
+            mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+        .stat-card h4 { font-size: 0.9rem; color: var(--muted); margin-bottom: 8px; }
+        .stat-value { font-size: 1.7rem; font-weight: 700; }
+        .stat-sub { font-size: 0.8rem; margin-top: 6px; color: var(--muted); }
+        .health-meter { margin-top: 8px; height: 6px; width: 100%; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+        .health-meter span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(120deg, #34d399, #22d3ee); width: 0%; transition: width 0.4s ease; }
+        .main-grid {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1.85fr 1.15fr;
+            gap: 22px;
+        }
+        @media (max-width: 1100px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(3, 7, 18, 0.45);
+        }
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        form, .form-grid { display: grid; gap: 16px; }
+        .form-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+        label { font-size: 0.84rem; color: var(--muted); }
+        input, select, textarea {
+            border-radius: 14px;
+            border: 1px solid rgba(148,163,184,0.25);
+            padding: 12px 14px;
+            background: rgba(3, 7, 18, 0.55);
+            color: var(--text);
+            font: inherit;
+        }
+        input:focus, select:focus, textarea:focus { outline: 2px solid rgba(56,189,248,0.4); }
+        textarea { min-height: 90px; resize: vertical; }
+        .toggle-line { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .hidden { display: none; }
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .transactions-list {
+            max-height: 580px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 6px;
+        }
+        .transactions-list::-webkit-scrollbar { width: 6px; }
+        .transactions-list::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 3px; }
+        .transaction-card {
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.25);
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1.7fr 1fr auto;
+            gap: 14px;
+            align-items: center;
+            background: rgba(6, 12, 29, 0.8);
+        }
+        @media (max-width: 720px) {
+            .transaction-card { grid-template-columns: 1fr; }
+        }
+        .transaction-main { display: flex; gap: 14px; align-items: center; }
+        .badge-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            font-size: 1.5rem;
+        }
+        .transaction-info h4 { font-size: 1rem; }
+        .transaction-info p { font-size: 0.8rem; color: var(--muted); }
+        .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+        .tag {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .amount { text-align: right; }
+        .amount strong { font-size: 1.05rem; }
+        .row-actions { display: flex; gap: 8px; }
+        .icon-btn {
+            border: none;
+            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            background: rgba(148,163,184,0.2);
+            color: var(--text);
+            cursor: pointer;
+        }
+        .donut {
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            margin: 0 auto;
+            position: relative;
+            background: rgba(255,255,255,0.08);
+        }
+        .donut::after {
+            content: "";
+            position: absolute;
+            inset: 42px;
+            border-radius: 50%;
+            background: var(--bg);
+        }
+        .donut-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .legend { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+        .legend-row { display: flex; justify-content: space-between; font-size: 0.85rem; }
+        .legend-left { display: flex; align-items: center; gap: 10px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+        canvas { width: 100%; height: 240px; border-radius: 18px; border: 1px solid rgba(148,163,184,0.2); background: rgba(4,7,20,0.8); }
+        .mini-bars { display: flex; gap: 6px; margin-top: 12px; }
+        .mini-bar { flex: 1; border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.03); text-align: center; }
+        .mini-bar span { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+        .progress-block { margin-top: 12px; }
+        .progress-track {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(148,163,184,0.18);
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .progress-track span {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(120deg,#fb7185,#facc15);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .scenario {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(15,23,42,0.65);
+            border: 1px solid rgba(148,163,184,0.18);
+        }
+        .scenario-top {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .insights-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .insights-list li {
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.2);
+            background: rgba(4,7,20,0.8);
+            font-size: 0.92rem;
+        }
+        .ai-summary {
+            border-radius: 18px;
+            padding: 16px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .anomaly-list { display: flex; flex-direction: column; gap: 10px; }
+        .anomaly-item {
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.3);
+            font-size: 0.85rem;
+        }
+        .goal-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .goal-list { display: flex; flex-direction: column; gap: 12px; }
+        .goal-card {
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.2);
+            padding: 14px;
+            background: rgba(6, 12, 29, 0.8);
+        }
+        .goal-card h4 { margin-bottom: 6px; }
+        .goal-meta { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; }
+        .empty-state { text-align: center; padding: 20px 10px; font-size: 0.9rem; color: var(--muted); }
+        .notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 16px;
+            background: #030712;
+            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: 0 20px 45px rgba(3,7,18,0.7);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        .notification.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.info { border-left: 4px solid var(--secondary); }
+        .notification.error { border-left: 4px solid var(--danger); }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: #060b1f;
+            border-radius: 22px;
+            border: 1px solid rgba(148,163,184,0.35);
+            padding: 26px;
+            max-width: 520px;
+            width: 94%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .close-btn {
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(148,163,184,0.2);
+            color: var(--text);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="hero">
+            <div class="hero-text">
+                <h1>Dashboard Financeiro Inteligente 2.0</h1>
+                <p>Visão completa de receitas, despesas, metas e cenários em um só lugar.</p>
+                <span style="color:var(--muted); font-size:0.85rem;" id="period-label">Período atual: mês vigente</span>
+            </div>
+            <div class="hero-actions">
+                <button class="btn btn-outline" id="load-demo">⚡ Carregar demo</button>
+                <button class="btn btn-outline" id="export-btn">📤 Exportar CSV</button>
+                <button class="btn btn-primary" id="scroll-form">➕ Registrar transação</button>
+            </div>
+        </header>
+
+        <section class="cards-grid">
+            <article class="stat-card">
+                <h4>Receitas</h4>
+                <div class="stat-value" id="card-income">R$ 0,00</div>
+                <div class="stat-sub" id="card-income-count">0 entradas</div>
+            </article>
+            <article class="stat-card">
+                <h4>Despesas</h4>
+                <div class="stat-value" id="card-expense">R$ 0,00</div>
+                <div class="stat-sub" id="card-expense-count">0 saídas</div>
+            </article>
+            <article class="stat-card">
+                <h4>Saldo</h4>
+                <div class="stat-value" id="card-balance">R$ 0,00</div>
+                <div class="stat-sub" id="card-balance-state">Equilíbrio</div>
+            </article>
+            <article class="stat-card">
+                <h4>Saúde Financeira</h4>
+                <div class="stat-value" id="card-health">0%</div>
+                <div class="health-meter"><span id="health-meter"></span></div>
+            </article>
+            <article class="stat-card">
+                <h4>Média diária</h4>
+                <div class="stat-value" id="card-daily">R$ 0,00</div>
+                <div class="stat-sub" id="card-daily-note">Base 30 dias</div>
+            </article>
+            <article class="stat-card">
+                <h4>Recorrências</h4>
+                <div class="stat-value" id="card-recurring">R$ 0,00</div>
+                <div class="stat-sub" id="card-recurring-count">0 compromissos</div>
+            </article>
+        </section>
+
+        <section class="main-grid">
+            <div class="left-column">
+                <article class="panel" id="form-panel">
+                    <h2>🧾 Registrar transação</h2>
+                    <form id="transaction-form">
+                        <div class="form-grid">
+                            <div>
+                                <label for="descricao">Descrição</label>
+                                <input type="text" id="descricao" placeholder="Ex.: Salário, Mercado, Uber" required>
+                            </div>
+                            <div>
+                                <label for="valor">Valor (R$)</label>
+                                <input type="number" id="valor" step="0.01" min="0.01" required>
+                            </div>
+                            <div>
+                                <label for="tipo">Tipo</label>
+                                <select id="tipo" required>
+                                    <option value="receita">Receita</option>
+                                    <option value="despesa">Despesa</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="categoria">Categoria</label>
+                                <select id="categoria" required>
+                                    <option value="salario">💼 Salário</option>
+                                    <option value="freelance">💻 Freelance</option>
+                                    <option value="investimentos">📊 Investimentos</option>
+                                    <option value="alimentacao">🍽️ Alimentação</option>
+                                    <option value="transporte">🚗 Transporte</option>
+                                    <option value="moradia">🏠 Moradia</option>
+                                    <option value="saude">💊 Saúde</option>
+                                    <option value="educacao">📚 Educação</option>
+                                    <option value="lazer">🎉 Lazer</option>
+                                    <option value="compras">🛍️ Compras</option>
+                                    <option value="outros">📦 Outros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="pagamento">Pagamento</label>
+                                <select id="pagamento" required>
+                                    <option value="pix">PIX</option>
+                                    <option value="debito">Débito</option>
+                                    <option value="credito">Crédito</option>
+                                    <option value="dinheiro">Dinheiro</option>
+                                    <option value="boleto">Boleto</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="data">Data</label>
+                                <input type="date" id="data" required>
+                            </div>
+                            <div>
+                                <label>Recorrência</label>
+                                <div class="toggle-line">
+                                    <input type="checkbox" id="recorrente">
+                                    <span>Repetir mensalmente</span>
+                                </div>
+                            </div>
+                            <div id="recorrencia-box" class="hidden">
+                                <label for="recorrencia-meses">Duração (meses)</label>
+                                <input type="number" id="recorrencia-meses" min="1" max="36" value="12">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Registrar</button>
+                    </form>
+                </article>
+
+                <article class="panel">
+                    <h2>🧰 Filtros inteligentes</h2>
+                    <div class="filters-row">
+                        <div>
+                            <label for="filter-type">Tipo</label>
+                            <select id="filter-type">
+                                <option value="all">Todos</option>
+                                <option value="receita">Receitas</option>
+                                <option value="despesa">Despesas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-payment">Pagamento</label>
+                            <select id="filter-payment">
+                                <option value="all">Todos</option>
+                                <option value="pix">PIX</option>
+                                <option value="debito">Débito</option>
+                                <option value="credito">Crédito</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-month">Mês</label>
+                            <select id="filter-month">
+                                <option value="current">Mês atual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sort-by">Ordenar por</label>
+                            <select id="sort-by">
+                                <option value="date-desc">Mais recentes</option>
+                                <option value="date-asc">Mais antigos</option>
+                                <option value="value-desc">Maior valor</option>
+                                <option value="value-asc">Menor valor</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label for="filter-search">Busca</label>
+                            <input type="text" id="filter-search" placeholder="Descrição, categoria, forma de pagamento">
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>📚 Transações</h2>
+                    <div class="transactions-list" id="transactions-list">
+                        <div class="empty-state">Nenhuma transação registrada ainda.</div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>🎯 Metas financeiras</h2>
+                    <form id="goal-form" class="goal-form">
+                        <div>
+                            <label for="goal-name">Meta</label>
+                            <input type="text" id="goal-name" placeholder="Ex.: Fundo de emergência" required>
+                        </div>
+                        <div>
+                            <label for="goal-target">Objetivo (R$)</label>
+                            <input type="number" id="goal-target" min="1" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="goal-progress">Já acumulado (R$)</label>
+                            <input type="number" id="goal-progress" min="0" step="0.01" required>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Adicionar meta</button>
+                    </form>
+                    <div class="goal-list" id="goal-list">
+                        <div class="empty-state">Nenhuma meta cadastrada.</div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="right-column">
+                <article class="panel">
+                    <h2>🎨 Distribuição por categoria</h2>
+                    <div class="donut" id="donut-chart">
+                        <div class="donut-value">
+                            <span style="font-size:0.8rem;color:var(--muted);">Total</span>
+                            <strong id="donut-total">R$ 0</strong>
+                        </div>
+                    </div>
+                    <div class="legend" id="donut-legend">
+                        <span class="empty-state" style="padding:0;">Sem despesas neste período.</span>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>📈 Linha do tempo & ritmo semanal</h2>
+                    <canvas id="trend-canvas"></canvas>
+                    <div class="mini-bars" id="weekly-bars">
+                        <div class="mini-bar">
+                            <strong>R$ 0,00</strong>
+                            <span>Hoje</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>📊 Orçamento e cenários</h2>
+                    <div class="form-grid" style="margin-bottom:10px;">
+                        <div>
+                            <label for="budget-total">Orçamento mensal (R$)</label>
+                            <input type="number" id="budget-total" min="0" step="0.01" value="4000">
+                        </div>
+                        <div>
+                            <label for="budget-savings">Meta de economia (R$)</label>
+                            <input type="number" id="budget-savings" min="0" step="0.01" value="800">
+                        </div>
+                        <div>
+                            <label for="budget-category">Categoria crítica</label>
+                            <select id="budget-category">
+                                <option value="alimentacao">Alimentação</option>
+                                <option value="transporte">Transporte</option>
+                                <option value="moradia">Moradia</option>
+                                <option value="saude">Saúde</option>
+                                <option value="educacao">Educação</option>
+                                <option value="lazer">Lazer</option>
+                                <option value="compras">Compras</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="budget-category-limit">Limite da categoria (R$)</label>
+                            <input type="number" id="budget-category-limit" min="0" step="0.01" value="600">
+                        </div>
+                    </div>
+                    <div class="progress-block">
+                        <strong>Execução do orçamento</strong>
+                        <div class="progress-track"><span id="budget-progress"></span></div>
+                        <div class="goal-meta" id="budget-summary"><span>0% usado</span><span>R$ 0 restantes</span></div>
+                    </div>
+                    <div class="progress-block">
+                        <strong>Categoria monitorada</strong>
+                        <div class="progress-track"><span id="category-progress"></span></div>
+                        <div class="goal-meta" id="category-summary"><span>0% usado</span><span>R$ 0 restantes</span></div>
+                    </div>
+                    <div class="scenario">
+                        <div class="scenario-top">
+                            <span>Simular corte de despesas</span>
+                            <strong id="scenario-percentage">15%</strong>
+                        </div>
+                        <input type="range" id="scenario-slider" min="0" max="50" value="15">
+                        <p style="margin-top:6px;font-size:0.85rem;color:var(--muted);" id="scenario-message">
+                            Reduza despesas e veja o impacto no saldo.
+                        </p>
+                        <strong id="scenario-result">Saldo projetado: R$ 0,00</strong>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>🧠 Insights e alertas</h2>
+                    <div class="ai-summary" id="ai-summary">
+                        Cadastre transações para ativar o resumo inteligente.
+                    </div>
+                    <ul class="insights-list" id="insights-list">
+                        <li>Sem dados suficientes para análises detalhadas.</li>
+                    </ul>
+                    <div style="margin-top:18px;">
+                        <strong>Anomalias monitoradas</strong>
+                        <div class="anomaly-list" id="anomaly-list">
+                            <div class="empty-state" style="padding:12px;">Nenhum alerta no momento.</div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <h2>🔁 Recorrências</h2>
+                    <div id="recurring-list" class="goal-list">
+                        <div class="empty-state">Nenhuma recorrência registrada.</div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Editar transação</h3>
+                <button class="close-btn" id="close-modal">✕</button>
+            </div>
+            <form id="edit-form" style="display:grid;gap:14px;">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label for="edit-descricao">Descrição</label>
+                    <input type="text" id="edit-descricao" required>
+                </div>
+                <div>
+                    <label for="edit-valor">Valor (R$)</label>
+                    <input type="number" id="edit-valor" min="0.01" step="0.01" required>
+                </div>
+                <div>
+                    <label for="edit-tipo">Tipo</label>
+                    <select id="edit-tipo" required>
+                        <option value="receita">Receita</option>
+                        <option value="despesa">Despesa</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-categoria">Categoria</label>
+                    <select id="edit-categoria" required>
+                        <option value="salario">Salário</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="investimentos">Investimentos</option>
+                        <option value="alimentacao">Alimentação</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="moradia">Moradia</option>
+                        <option value="saude">Saúde</option>
+                        <option value="educacao">Educação</option>
+                        <option value="lazer">Lazer</option>
+                        <option value="compras">Compras</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-pagamento">Pagamento</label>
+                    <select id="edit-pagamento" required>
+                        <option value="pix">PIX</option>
+                        <option value="debito">Débito</option>
+                        <option value="credito">Crédito</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="boleto">Boleto</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-data">Data</label>
+                    <input type="date" id="edit-data" required>
+                </div>
+                <div>
+                    <label>Recorrente?</label>
+                    <div class="toggle-line">
+                        <input type="checkbox" id="edit-recorrente">
+                        <span>Repetir mensalmente</span>
+                    </div>
+                </div>
+                <div id="edit-recorrencia-box" class="hidden">
+                    <label for="edit-recorrencia-meses">Duração (meses)</label>
+                    <input type="number" id="edit-recorrencia-meses" min="1" max="36" value="12">
+                </div>
+                <div style="display:flex;gap:12px;margin-top:6px;">
+                    <button type="button" class="btn btn-outline" id="cancel-edit" style="flex:1;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"><span id="notification-text"></span></div>
+
+    <script>
+        const transactions = [];
+        const goals = [];
+        const filters = {
+            type: 'all',
+            payment: 'all',
+            month: getCurrentMonthKey(),
+            search: '',
+            sort: 'date-desc'
+        };
+        const budgetState = {
+            total: 4000,
+            savings: 800,
+            category: 'alimentacao',
+            categoryLimit: 600
+        };
+        const categoryIcons = {
+            salario: '💼', freelance: '💻', investimentos: '📊', alimentacao: '🍽️',
+            transporte: '🚗', moradia: '🏠', saude: '💊', educacao: '📚',
+            lazer: '🎉', compras: '🛍️', outros: '📦'
+        };
+        const categoryColors = {
+            salario: '#34d399',
+            freelance: '#38bdf8',
+            investimentos: '#facc15',
+            alimentacao: '#fb7185',
+            transporte: '#a78bfa',
+            moradia: '#f97316',
+            saude: '#ef4444',
+            educacao: '#60a5fa',
+            lazer: '#2dd4bf',
+            compras: '#c084fc',
+            outros: '#94a3b8'
+        };
+        const paymentLabels = {
+            pix: 'PIX', debito: 'Débito', credito: 'Crédito',
+            dinheiro: 'Dinheiro', boleto: 'Boleto', outro: 'Outro'
+        };
+        const categoryKeywords = {
+            salario: ['salario', 'contracheque', 'pagamento', 'holerite'],
+            freelance: ['freelance', 'freela', 'projeto', 'consultoria'],
+            investimentos: ['dividendo', 'invest', 'juros', 'rend'],
+            alimentacao: ['mercado', 'supermercado', 'ifood', 'restaurante', 'lanche', 'pizza'],
+            transporte: ['uber', '99', 'gasolina', 'combustivel', 'metro', 'onibus', 'estacionamento', 'pedagio'],
+            moradia: ['aluguel', 'condominio', 'luz', 'agua', 'energia', 'iptu'],
+            saude: ['medico', 'remedio', 'farmacia', 'plano', 'dentista'],
+            educacao: ['curso', 'faculdade', 'mensalidade', 'livro', 'material'],
+            lazer: ['cinema', 'show', 'viagem', 'jogo', 'streaming', 'spotify', 'netflix'],
+            compras: ['shopping', 'roupa', 'eletronico', 'loja', 'sapato'],
+            outros: []
+        };
+        let trendSeries = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTodayDate();
+            bindEvents();
+            populateMonthFilter();
+            updatePeriodLabel();
+            refreshAll();
+        });
+
+        function bindEvents() {
+            document.getElementById('transaction-form').addEventListener('submit', handleAddTransaction);
+            document.getElementById('descricao').addEventListener('blur', autoSuggestCategory);
+            document.getElementById('recorrente').addEventListener('change', toggleRecurrenceBox);
+            document.getElementById('filter-type').addEventListener('change', e => { filters.type = e.target.value; renderTransactions(); });
+            document.getElementById('filter-payment').addEventListener('change', e => { filters.payment = e.target.value; renderTransactions(); });
+            document.getElementById('filter-month').addEventListener('change', e => { filters.month = e.target.value === 'all' ? 'all' : e.target.value; updatePeriodLabel(); refreshAll(); });
+            document.getElementById('filter-search').addEventListener('input', e => { filters.search = e.target.value.toLowerCase(); renderTransactions(); });
+            document.getElementById('sort-by').addEventListener('change', e => { filters.sort = e.target.value; renderTransactions(); });
+            document.getElementById('budget-total').addEventListener('input', e => { budgetState.total = parseFloat(e.target.value) || 0; updateBudgetPanel(); });
+            document.getElementById('budget-savings').addEventListener('input', e => { budgetState.savings = parseFloat(e.target.value) || 0; updateBudgetPanel(); });
+            document.getElementById('budget-category').addEventListener('change', e => { budgetState.category = e.target.value; updateBudgetPanel(); });
+            document.getElementById('budget-category-limit').addEventListener('input', e => { budgetState.categoryLimit = parseFloat(e.target.value) || 0; updateBudgetPanel(); });
+            document.getElementById('scenario-slider').addEventListener('input', updateScenario);
+            document.getElementById('export-btn').addEventListener('click', exportCSV);
+            document.getElementById('scroll-form').addEventListener('click', () => document.getElementById('form-panel').scrollIntoView({ behavior: 'smooth' }));
+            document.getElementById('goal-form').addEventListener('submit', handleAddGoal);
+            document.getElementById('load-demo').addEventListener('click', loadDemoData);
+            document.getElementById('edit-form').addEventListener('submit', handleEditSubmit);
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('cancel-edit').addEventListener('click', closeModal);
+            document.getElementById('edit-recorrente').addEventListener('change', toggleEditRecurrenceBox);
+            window.addEventListener('resize', drawTrendChart);
+        }
+
+        function handleAddTransaction(e) {
+            e.preventDefault();
+            const valor = parseFloat(document.getElementById('valor').value);
+            const descricao = document.getElementById('descricao').value.trim();
+            if (!valor || !descricao) return showNotification('Preencha os campos obrigatórios.', 'error');
+            const recurring = document.getElementById('recorrente').checked;
+            const newTransaction = {
+                id: Date.now(),
+                descricao,
+                valor,
+                tipo: document.getElementById('tipo').value,
+                categoria: document.getElementById('categoria').value,
+                pagamento: document.getElementById('pagamento').value,
+                data: document.getElementById('data').value,
+                recorrente: recurring,
+                recorrenciaMeses: recurring ? (parseInt(document.getElementById('recorrencia-meses').value, 10) || 1) : 0
+            };
+            transactions.push(newTransaction);
+            e.target.reset();
+            setTodayDate();
+            document.getElementById('recorrencia-box').classList.add('hidden');
+            populateMonthFilter();
+            refreshAll();
+            showNotification('Transação registrada!', 'success');
+        }
+
+        function handleEditSubmit(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-id').value, 10);
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            transactions[idx] = {
+                id,
+                descricao: document.getElementById('edit-descricao').value.trim(),
+                valor: parseFloat(document.getElementById('edit-valor').value),
+                tipo: document.getElementById('edit-tipo').value,
+                categoria: document.getElementById('edit-categoria').value,
+                pagamento: document.getElementById('edit-pagamento').value,
+                data: document.getElementById('edit-data').value,
+                recorrente: document.getElementById('edit-recorrente').checked,
+                recorrenciaMeses: document.getElementById('edit-recorrente').checked ? (parseInt(document.getElementById('edit-recorrencia-meses').value, 10) || 1) : 0
+            };
+            closeModal();
+            refreshAll();
+            showNotification('Transação atualizada!', 'success');
+        }
+
+        function handleAddGoal(e) {
+            e.preventDefault();
+            const name = document.getElementById('goal-name').value.trim();
+            const target = parseFloat(document.getElementById('goal-target').value);
+            const progress = parseFloat(document.getElementById('goal-progress').value);
+            if (!name || !target || progress < 0) return;
+            goals.push({ id: Date.now(), name, target, progress: Math.min(progress, target) });
+            e.target.reset();
+            renderGoals();
+            showNotification('Meta adicionada!', 'success');
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goal-list');
+            if (!goals.length) {
+                container.innerHTML = `<div class="empty-state">Nenhuma meta cadastrada.</div>`;
+                return;
+            }
+            container.innerHTML = goals.map(goal => {
+                const percent = goal.target ? Math.min((goal.progress / goal.target) * 100, 100) : 0;
+                return `
+                    <div class="goal-card">
+                        <h4>${goal.name}</h4>
+                        <div class="progress-track" style="margin:10px 0;"><span style="width:${percent}%; background:linear-gradient(120deg,#34d399,#22d3ee);"></span></div>
+                        <div class="goal-meta">
+                            <span>${formatCurrency(goal.progress)} / ${formatCurrency(goal.target)}</span>
+                            <span>${percent.toFixed(1)}%</span>
+                        </div>
+                        <button class="btn btn-outline" style="margin-top:10px;width:100%;" onclick="removeGoal(${goal.id})">Remover</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function removeGoal(id) {
+            const index = goals.findIndex(g => g.id === id);
+            if (index === -1) return;
+            goals.splice(index, 1);
+            renderGoals();
+            showNotification('Meta removida.', 'info');
+        }
+
+        function autoSuggestCategory() {
+            const desc = document.getElementById('descricao').value.toLowerCase();
+            if (!desc) return;
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+                if (keywords.some(keyword => desc.includes(keyword))) {
+                    document.getElementById('categoria').value = category;
+                    break;
+                }
+            }
+        }
+
+        function toggleRecurrenceBox() {
+            document.getElementById('recorrencia-box').classList.toggle('hidden', !document.getElementById('recorrente').checked);
+        }
+
+        function toggleEditRecurrenceBox() {
+            document.getElementById('edit-recorrencia-box').classList.toggle('hidden', !document.getElementById('edit-recorrente').checked);
+        }
+
+        function refreshAll() {
+            updateDashboard();
+            renderTransactions();
+            updateDonut();
+            updateTrendSeries();
+            updateWeeklyBars();
+            updateBudgetPanel();
+            updateScenario();
+            updateInsights();
+            updateAnomalies();
+            updateRecurring();
+        }
+
+        function updateDashboard() {
+            const scoped = getTransactionsForScope();
+            const income = scoped.filter(t => t.tipo === 'receita');
+            const expense = scoped.filter(t => t.tipo === 'despesa');
+            const totalIncome = sumValues(income);
+            const totalExpense = sumValues(expense);
+            const balance = totalIncome - totalExpense;
+            const recurring = scoped.filter(t => t.recorrente);
+            const recurringTotal = sumValues(recurring);
+            const days = filters.month === 'all' ? 30 : getDaysInMonth(filters.month);
+            document.getElementById('card-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('card-income-count').textContent = `${income.length} ${income.length === 1 ? 'entrada' : 'entradas'}`;
+            document.getElementById('card-expense').textContent = formatCurrency(totalExpense);
+            document.getElementById('card-expense-count').textContent = `${expense.length} ${expense.length === 1 ? 'saída' : 'saídas'}`;
+            document.getElementById('card-balance').textContent = formatCurrency(balance);
+            document.getElementById('card-balance-state').textContent = balance >= 0 ? 'Superávit' : 'Déficit';
+            const avgDaily = days ? totalExpense / days : 0;
+            document.getElementById('card-daily').textContent = formatCurrency(avgDaily);
+            document.getElementById('card-daily-note').textContent = `Base ${days} dias`;
+            document.getElementById('card-recurring').textContent = formatCurrency(recurringTotal);
+            document.getElementById('card-recurring-count').textContent = `${recurring.length} ${recurring.length === 1 ? 'contrato' : 'contratos'}`;
+            const health = calcHealth(totalIncome, totalExpense, recurringTotal);
+            document.getElementById('card-health').textContent = `${health}%`;
+            document.getElementById('health-meter').style.width = `${health}%`;
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-list');
+            if (!transactions.length) {
+                container.innerHTML = `<div class="empty-state">Nenhuma transação registrada ainda.</div>`;
+                return;
+            }
+            const filtered = getFilteredTransactions();
+            if (!filtered.length) {
+                container.innerHTML = `<div class="empty-state">Nenhum resultado com os filtros atuais.</div>`;
+                return;
+            }
+            container.innerHTML = filtered.map(item => `
+                <div class="transaction-card">
+                    <div class="transaction-main">
+                        <div class="badge-icon" style="background:${colorAlpha(categoryColors[item.categoria] || '#94a3b8',0.18)};color:${categoryColors[item.categoria] || '#fff'};">
+                            ${categoryIcons[item.categoria] || '💡'}
+                        </div>
+                        <div class="transaction-info">
+                            <h4>${item.descricao}</h4>
+                            <p>${formatDate(item.data)} • ${capitalize(item.categoria)} • ${paymentLabels[item.pagamento]}</p>
+                            <div class="tags">
+                                <span class="tag" style="color:${item.tipo === 'receita' ? '#34d399' : '#fb7185'};border-color:${item.tipo === 'receita' ? 'rgba(52,211,153,0.4)' : 'rgba(251,113,133,0.4)'};">
+                                    ${item.tipo === 'receita' ? 'Receita' : 'Despesa'}
+                                </span>
+                                ${item.recorrente ? `<span class="tag" style="border-color:rgba(250,204,21,0.4);color:#facc15;">Recorrente</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="amount">
+                        <strong style="color:${item.tipo === 'receita' ? '#34d399' : '#fb7185'};">${item.tipo === 'receita' ? '+' : '-'} ${formatCurrency(item.valor)}</strong>
+                        <span style="font-size:0.75rem;color:var(--muted);">ID ${item.id}</span>
+                    </div>
+                    <div class="row-actions">
+                        <button class="icon-btn" onclick="openEditModal(${item.id})">✏️</button>
+                        <button class="icon-btn" onclick="deleteTransaction(${item.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getFilteredTransactions() {
+            return transactions
+                .filter(t => filters.type === 'all' || t.tipo === filters.type)
+                .filter(t => filters.payment === 'all' || t.pagamento === filters.payment)
+                .filter(t => filters.month === 'all' || getMonthKey(t.data) === filters.month)
+                .filter(t => t.descricao.toLowerCase().includes(filters.search) ||
+                             t.categoria.toLowerCase().includes(filters.search) ||
+                             paymentLabels[t.pagamento].toLowerCase().includes(filters.search))
+                .sort((a, b) => {
+                    switch (filters.sort) {
+                        case 'date-asc': return new Date(a.data) - new Date(b.data);
+                        case 'value-desc': return b.valor - a.valor;
+                        case 'value-asc': return a.valor - b.valor;
+                        default: return new Date(b.data) - new Date(a.data);
+                    }
+                });
+        }
+
+        function updateDonut() {
+            const scoped = getTransactionsForScope().filter(t => t.tipo === 'despesa');
+            const total = sumValues(scoped);
+            const donut = document.getElementById('donut-chart');
+            const legend = document.getElementById('donut-legend');
+            document.getElementById('donut-total').textContent = formatCurrency(total);
+            if (!total) {
+                donut.style.background = 'rgba(255,255,255,0.08)';
+                legend.innerHTML = `<span class="empty-state" style="padding:0;">Sem despesas neste período.</span>`;
+                return;
+            }
+            const byCat = Object.entries(groupBy(scoped, 'categoria'))
+                .map(([categoria, items]) => ({ categoria, valor: sumValues(items) }))
+                .sort((a, b) => b.valor - a.valor);
+            let gradient = '';
+            let cumulative = 0;
+            byCat.forEach(entry => {
+                const start = (cumulative / total) * 100;
+                cumulative += entry.valor;
+                const end = (cumulative / total) * 100;
+                gradient += `${categoryColors[entry.categoria] || '#94a3b8'} ${start}% ${end}%,`;
+            });
+            donut.style.background = `conic-gradient(${gradient.slice(0,-1)})`;
+            legend.innerHTML = byCat.slice(0, 6).map(entry => `
+                <div class="legend-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background:${categoryColors[entry.categoria] || '#94a3b8'};"></span>
+                        <span>${capitalize(entry.categoria)}</span>
+                    </div>
+                    <strong>${formatCurrency(entry.valor)}</strong>
+                </div>
+            `).join('');
+        }
+
+        function updateTrendSeries() {
+            const scoped = getTransactionsForScope().sort((a, b) => new Date(a.data) - new Date(b.data));
+            let running = 0;
+            trendSeries = scoped.map(t => {
+                running += t.tipo === 'receita' ? t.valor : -t.valor;
+                return { date: t.data, value: running };
+            });
+            drawTrendChart();
+        }
+
+        function drawTrendChart() {
+            const canvas = document.getElementById('trend-canvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpr;
+            canvas.height = canvas.clientHeight * dpr;
+            ctx.setTransform(1,0,0,1,0,0);
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+            ctx.fillStyle = 'rgba(4,7,20,0.9)';
+            ctx.fillRect(0,0,canvas.clientWidth,canvas.clientHeight);
+            if (!trendSeries.length) {
+                ctx.fillStyle = 'rgba(148,163,184,0.7)';
+                ctx.font = '14px Inter';
+                ctx.fillText('Adicione transações para visualizar a linha do tempo.', 20, canvas.clientHeight / 2);
+                return;
+            }
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            const padding = 30;
+            const values = trendSeries.map(p => p.value);
+            const min = Math.min(...values, 0);
+            const max = Math.max(...values, 0);
+            const range = max - min || 1;
+            const xStep = (width - padding * 2) / Math.max(trendSeries.length - 1, 1);
+            ctx.strokeStyle = 'rgba(148,163,184,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.stroke();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#34d399';
+            ctx.fillStyle = 'rgba(52,211,153,0.15)';
+            ctx.beginPath();
+            trendSeries.forEach((point, index) => {
+                const x = padding + index * xStep;
+                const y = height - padding - ((point.value - min) / range) * (height - padding * 2);
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.lineTo(padding + (trendSeries.length - 1) * xStep, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function updateWeeklyBars() {
+            const bars = document.getElementById('weekly-bars');
+            const today = new Date();
+            const data = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const key = date.toISOString().split('T')[0];
+                const dayTransactions = transactions.filter(t => t.data === key);
+                const net = dayTransactions.reduce((sum, t) => sum + (t.tipo === 'receita' ? t.valor : -t.valor), 0);
+                data.push({ day: date.toLocaleDateString('pt-BR', { weekday: 'short' }), value: net });
+            }
+            bars.innerHTML = data.map(entry => `
+                <div class="mini-bar">
+                    <strong style="color:${entry.value >= 0 ? '#34d399' : '#fb7185'};">${formatCurrency(entry.value)}</strong>
+                    <span>${entry.day}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateBudgetPanel() {
+            const scoped = getTransactionsForScope();
+            const expenses = scoped.filter(t => t.tipo === 'despesa');
+            const totalExpense = sumValues(expenses);
+            const categoryExpense = expenses.filter(t => t.categoria === budgetState.category).reduce((sum, t) => sum + t.valor, 0);
+            const budgetUsage = budgetState.total ? (totalExpense / budgetState.total) * 100 : 0;
+            const categoryUsage = budgetState.categoryLimit ? (categoryExpense / budgetState.categoryLimit) * 100 : 0;
+            document.getElementById('budget-progress').style.width = `${Math.min(budgetUsage, 100)}%`;
+            document.getElementById('category-progress').style.width = `${Math.min(categoryUsage, 100)}%`;
+            document.getElementById('budget-summary').innerHTML = `<span>${budgetUsage.toFixed(1)}% usado</span><span>${formatCurrency(budgetState.total - totalExpense)}</span>`;
+            document.getElementById('category-summary').innerHTML = `<span>${categoryUsage.toFixed(1)}% usado</span><span>${formatCurrency(budgetState.categoryLimit - categoryExpense)}</span>`;
+        }
+
+        function updateScenario() {
+            const percent = parseInt(document.getElementById('scenario-slider').value, 10);
+            document.getElementById('scenario-percentage').textContent = `${percent}%`;
+            const scoped = getTransactionsForScope();
+            const income = sumValues(scoped.filter(t => t.tipo === 'receita'));
+            const expense = sumValues(scoped.filter(t => t.tipo === 'despesa'));
+            const projected = income - (expense * (1 - percent / 100));
+            document.getElementById('scenario-result').textContent = `Saldo projetado: ${formatCurrency(projected)}`;
+            document.getElementById('scenario-message').textContent = percent
+                ? `Reduzindo ${percent}% dos gastos, você alcançaria ${formatCurrency(projected)}.`
+                : 'Ajuste o controle para simular diferentes cortes.';
+        }
+
+        function updateInsights() {
+            const scoped = getTransactionsForScope();
+            const insightsContainer = document.getElementById('insights-list');
+            const aiBox = document.getElementById('ai-summary');
+            if (!scoped.length) {
+                aiBox.textContent = 'Cadastre transações para ativar o resumo inteligente.';
+                insightsContainer.innerHTML = `<li>Sem dados suficientes para análises.</li>`;
+                return;
+            }
+            const income = sumValues(scoped.filter(t => t.tipo === 'receita'));
+            const expense = sumValues(scoped.filter(t => t.tipo === 'despesa'));
+            const saldo = income - expense;
+            const topCategory = getTopCategory(scoped.filter(t => t.tipo === 'despesa'));
+            const savingsRate = income ? (saldo / income) * 100 : 0;
+            aiBox.innerHTML = `
+                ✅ Balanço: ${saldo >= 0 ? 'superávit' : 'déficit'} de ${formatCurrency(saldo)}.<br>
+                💡 Taxa de economia: ${savingsRate.toFixed(1)}%.<br>
+                🏷️ Categoria campeã de gastos: ${topCategory ? capitalize(topCategory.categoria) : '—'}.
+            `;
+            const insights = [];
+            if (topCategory) {
+                insights.push(`Sua maior despesa está em <strong>${capitalize(topCategory.categoria)}</strong> (${formatCurrency(topCategory.valor)}). Avalie cortes ou renegociações.`);
+            }
+            if (expense > budgetState.total && budgetState.total) {
+                insights.push(`As despesas atuais ultrapassam o orçamento definido em ${formatCurrency(expense - budgetState.total)}.`);
+            }
+            if (savingsRate >= 20) insights.push(`Excelente! Você está poupando ${savingsRate.toFixed(1)}% das receitas.`);
+            if (savingsRate < 10 && income) insights.push(`Sua taxa de economia está em ${savingsRate.toFixed(1)}%. Tente direcionar pelo menos 10% das receitas ao fundo de reserva.`);
+            if (!insights.length) insights.push('Continue registrando para desbloquear mais recomendações.');
+            insightsContainer.innerHTML = insights.map(text => `<li>${text}</li>`).join('');
+        }
+
+        function updateAnomalies() {
+            const scoped = getTransactionsForScope().filter(t => t.tipo === 'despesa');
+            const container = document.getElementById('anomaly-list');
+            if (scoped.length < 3) {
+                container.innerHTML = `<div class="empty-state" style="padding:12px;">Sem dados suficientes para alertas.</div>`;
+                return;
+            }
+            const avg = sumValues(scoped) / scoped.length;
+            const threshold = avg * 1.6;
+            const anomalies = scoped.filter(t => t.valor > threshold);
+            const categoryShare = Object.entries(groupBy(scoped, 'categoria')).map(([categoria, items]) => ({
+                categoria, share: (sumValues(items) / sumValues(scoped)) * 100
+            })).filter(entry => entry.share > 40);
+            if (!anomalies.length && !categoryShare.length) {
+                container.innerHTML = `<div class="empty-state" style="padding:12px;">Nenhum alerta no momento.</div>`;
+                return;
+            }
+            container.innerHTML = `
+                ${anomalies.map(item => `<div class="anomaly-item">Despesa atípica: ${item.descricao} (${formatCurrency(item.valor)}) em ${formatDate(item.data)}.</div>`).join('')}
+                ${categoryShare.map(entry => `<div class="anomaly-item">Categoria ${capitalize(entry.categoria)} responde por ${entry.share.toFixed(1)}% das despesas.</div>`).join('')}
+            `;
+        }
+
+        function updateRecurring() {
+            const container = document.getElementById('recurring-list');
+            const recurringItems = transactions.filter(t => t.recorrente);
+            if (!recurringItems.length) {
+                container.innerHTML = `<div class="empty-state">Nenhuma recorrência registrada.</div>`;
+                return;
+            }
+            container.innerHTML = recurringItems.map(item => `
+                <div class="goal-card">
+                    <h4>${item.descricao}</h4>
+                    <div class="goal-meta" style="margin-bottom:6px;">
+                        <span>${paymentLabels[item.pagamento]}</span>
+                        <strong style="color:#facc15;">${formatCurrency(item.valor)}</strong>
+                    </div>
+                    <div class="goal-meta">
+                        <span>Próxima: ${formatDate(addMonths(new Date(item.data), 1).toISOString().split('T')[0])}</span>
+                        <span>${item.recorrenciaMeses} meses</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateMonthFilter() {
+            const select = document.getElementById('filter-month');
+            const monthSet = new Set(transactions.map(t => getMonthKey(t.data)));
+            const list = Array.from(monthSet).sort().reverse();
+            select.innerHTML = `<option value="all">Todos os meses</option>`;
+            list.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = formatMonth(month);
+                select.appendChild(option);
+            });
+            if (!filters.month || (filters.month !== 'all' && !monthSet.has(filters.month))) {
+                filters.month = getCurrentMonthKey();
+            }
+            select.value = filters.month;
+        }
+
+        function updatePeriodLabel() {
+            const label = document.getElementById('period-label');
+            label.textContent = filters.month === 'all'
+                ? 'Período atual: todos os meses'
+                : `Período atual: ${formatMonth(filters.month)}`;
+        }
+
+        function openEditModal(id) {
+            const modal = document.getElementById('edit-modal');
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return;
+            document.getElementById('edit-id').value = transaction.id;
+            document.getElementById('edit-descricao').value = transaction.descricao;
+            document.getElementById('edit-valor').value = transaction.valor;
+            document.getElementById('edit-tipo').value = transaction.tipo;
+            document.getElementById('edit-categoria').value = transaction.categoria;
+            document.getElementById('edit-pagamento').value = transaction.pagamento;
+            document.getElementById('edit-data').value = transaction.data;
+            document.getElementById('edit-recorrente').checked = transaction.recorrente;
+            document.getElementById('edit-recorrencia-meses').value = transaction.recorrenciaMeses || 1;
+            toggleEditRecurrenceBox();
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        function deleteTransaction(id) {
+            const index = transactions.findIndex(t => t.id === id);
+            if (index === -1) return;
+            transactions.splice(index, 1);
+            populateMonthFilter();
+            refreshAll();
+            showNotification('Transação excluída.', 'info');
+        }
+
+        function loadDemoData() {
+            transactions.length = 0;
+            const baseDate = new Date();
+            const sample = [
+                { descricao: 'Salário CLT', valor: 5800, tipo: 'receita', categoria: 'salario', pagamento: 'pix', offset: 0, recorrente: false },
+                { descricao: 'Freelance UI', valor: 1800, tipo: 'receita', categoria: 'freelance', pagamento: 'pix', offset: -3, recorrente: false },
+                { descricao: 'Mercado mensal', valor: 820, tipo: 'despesa', categoria: 'alimentacao', pagamento: 'debito', offset: -2, recorrente: true, meses: 12 },
+                { descricao: 'Aluguel', valor: 2300, tipo: 'despesa', categoria: 'moradia', pagamento: 'pix', offset: -10, recorrente: true, meses: 12 },
+                { descricao: 'Plano de saúde', valor: 620, tipo: 'despesa', categoria: 'saude', pagamento: 'boleto', offset: -7, recorrente: true, meses: 12 },
+                { descricao: 'Uber viagens', valor: 210, tipo: 'despesa', categoria: 'transporte', pagamento: 'credito', offset: -1, recorrente: false },
+                { descricao: 'Streaming', valor: 55, tipo: 'despesa', categoria: 'lazer', pagamento: 'credito', offset: -4, recorrente: true, meses: 12 },
+                { descricao: 'Curso online', valor: 320, tipo: 'despesa', categoria: 'educacao', pagamento: 'credito', offset: -8, recorrente: false },
+                { descricao: 'Investimento Tesouro', valor: 600, tipo: 'receita', categoria: 'investimentos', pagamento: 'pix', offset: -5, recorrente: false },
+                { descricao: 'Compra notebook', valor: 4200, tipo: 'despesa', categoria: 'compras', pagamento: 'credito', offset: -12, recorrente: false }
+            ];
+            sample.forEach(item => {
+                const date = new Date(baseDate);
+                date.setDate(baseDate.getDate() + item.offset);
+                transactions.push({
+                    id: Date.now() + Math.random(),
+                    descricao: item.descricao,
+                    valor: item.valor,
+                    tipo: item.tipo,
+                    categoria: item.categoria,
+                    pagamento: item.pagamento,
+                    data: date.toISOString().split('T')[0],
+                    recorrente: item.recorrente || false,
+                    recorrenciaMeses: item.recorrente ? (item.meses || 12) : 0
+                });
+            });
+            populateMonthFilter();
+            refreshAll();
+            showNotification('Dados de demonstração carregados!', 'success');
+        }
+
+        function exportCSV() {
+            if (!transactions.length) {
+                showNotification('Não há dados para exportar.', 'info');
+                return;
+            }
+            const rows = [
+                ['Descrição', 'Valor', 'Tipo', 'Categoria', 'Data', 'Pagamento', 'Recorrente', 'Meses'].join(';'),
+                ...transactions.map(t => [
+                    escapeCsv(t.descricao),
+                    t.valor.toFixed(2).replace('.', ','),
+                    t.tipo,
+                    t.categoria,
+                    t.data,
+                    t.pagamento,
+                    t.recorrente ? 'Sim' : 'Não',
+                    t.recorrenciaMeses || 0
+                ].join(';'))
+            ].join('\n');
+            const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'dashboard-financeiro.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+            showNotification('CSV exportado com sucesso!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const box = document.getElementById('notification');
+            const text = document.getElementById('notification-text');
+            box.className = `notification ${type}`;
+            text.textContent = message;
+            box.classList.add('show');
+            setTimeout(() => box.classList.remove('show'), 3000);
+        }
+
+        // Helper functions
+        function setTodayDate() {
+            document.getElementById('data').value = new Date().toISOString().split('T')[0];
+        }
+        function sumValues(arr) {
+            return arr.reduce((sum, t) => sum + t.valor, 0);
+        }
+        function getTopCategory(list) {
+            if (!list.length) return null;
+            return Object.entries(groupBy(list, 'categoria'))
+                .map(([categoria, items]) => ({ categoria, valor: sumValues(items) }))
+                .sort((a, b) => b.valor - a.valor)[0];
+        }
+        function getTransactionsForScope() {
+            if (filters.month === 'all') return [...transactions];
+            return transactions.filter(t => getMonthKey(t.data) === filters.month);
+        }
+        function getMonthKey(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        }
+        function getCurrentMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+        function getDaysInMonth(key) {
+            const [year, month] = key.split('-').map(Number);
+            return new Date(year, month, 0).getDate();
+        }
+        function formatMonth(key) {
+            const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            const [year, month] = key.split('-').map(Number);
+            return `${months[month - 1]}/${year}`;
+        }
+        function formatDate(dateStr) {
+            const date = new Date(`${dateStr}T00:00:00`);
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        }
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+        }
+        function capitalize(str) {
+            return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+        }
+        function groupBy(arr, key) {
+            return arr.reduce((acc, item) => {
+                acc[item[key]] = acc[item[key]] || [];
+                acc[item[key]].push(item);
+                return acc;
+            }, {});
+        }
+        function colorAlpha(hex, alpha) {
+            const bigint = parseInt(hex.replace('#',''),16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+        function calcHealth(income, expense, recurring) {
+            if (!income && !expense) return 0;
+            let score = 60;
+            const balance = income - expense;
+            score += Math.max(Math.min(balance / (income || 1) * 40, 20), -20);
+            const recurringWeight = income ? (recurring / income) : 0;
+            score -= recurringWeight * 35;
+            const savingsRate = income ? ((income - expense) / income) * 100 : 0;
+            score += Math.min(Math.max(savingsRate, -20), 25);
+            return Math.max(0, Math.min(100, Math.round(score)));
+        }
+        function escapeCsv(text) {
+            if (!text) return '';
+            return /[;"\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        }
+        function addMonths(date, months) {
+            const clone = new Date(date);
+            clone.setMonth(clone.getMonth() + months);
+            return clone;
+        }
+
+        window.openEditModal = openEditModal;
+        window.deleteTransaction = deleteTransaction;
+        window.removeGoal = removeGoal;
+    </script>
+</body>
+</html>
